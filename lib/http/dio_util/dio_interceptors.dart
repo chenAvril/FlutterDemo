@@ -89,6 +89,6 @@ class DioInterceptors extends Interceptor {
     }
     //用 hander.resolve 返回处理异常之后的结果 err.response
     var data = ResponseData(code: 1, message: "请求失败啦", data: err);
-    return handler.resolve(Response(data:data, requestOptions: err.requestOptions));
+    handler.resolve(Response(data:data, requestOptions: err.requestOptions));
   }
 }
