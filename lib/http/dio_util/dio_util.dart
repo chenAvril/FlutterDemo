@@ -4,12 +4,20 @@ import 'package:cookie_jar/cookie_jar.dart';
 import 'package:dio/adapter.dart';
 import 'package:dio/dio.dart';
 import 'package:dio_cookie_manager/dio_cookie_manager.dart';
+import 'package:system_proxy/system_proxy.dart';
 
 import 'dio_cache_interceptors.dart';
 import 'dio_interceptors.dart';
-import 'dio_method.dart';
-import 'dio_token_interceptors.dart';
 import 'dio_transformer.dart';
+
+enum DioMethod {
+  get,
+  post,
+  put,
+  delete,
+  patch,
+  head,
+}
 
 class DioUtil {
 
@@ -17,7 +25,8 @@ class DioUtil {
   static const int CONNECT_TIMEOUT = 6*1000;
   /// 响应超时时间
   static const int RECEIVE_TIMEOUT = 6*1000;
-  /// https://seniverse.yuque.com/docs/share/cd531fe7-714d-4bd7-8113-55adeaec54af?#%20%E3%80%8A%E5%A4%A9%E6%B0%94%E5%AE%9E%E5%86%B5%E3%80%8B
+  /// 发送超时时间
+  static const int SEND_TIMEOUT = 6*1000;
   /// 请求的URL前缀
   static String BASE_URL = "https://api.seniverse.com/v3/";
   /// 是否开启网络缓存,默认false
@@ -46,8 +55,6 @@ class DioUtil {
 
   /// 取消请求token
   CancelToken _cancelToken = CancelToken();
-  /// cookie
-  CookieJar cookieJar = CookieJar();
 
   ///请求的Content-Type，默认值是"application/json; charset=utf-8".
   /// 如果您想以"application/x-www-form-urlencoded"格式编码请求数据,
@@ -58,7 +65,8 @@ class DioUtil {
         baseUrl: BASE_URL,
         contentType: "application/json; charset=utf-8",
         connectTimeout: CONNECT_TIMEOUT,
-        receiveTimeout: RECEIVE_TIMEOUT
+        receiveTimeout: RECEIVE_TIMEOUT,
+        sendTimeout: SEND_TIMEOUT
     );
 
     /// 初始化dio
@@ -71,44 +79,41 @@ class DioUtil {
     _dio.transformer = DioTransformer();
 
     /// 添加cookie管理器
+    CookieJar cookieJar = CookieJar();
     _dio.interceptors.add(CookieManager(cookieJar));
-
-    /// 刷新token拦截器(lock/unlock)
-    // _dio.interceptors.add(DioTokenInterceptors());
 
     /// 添加缓存拦截器
     _dio.interceptors.add(DioCacheInterceptors());
   }
 
-  /// 设置Http代理(设置即开启)
-  void setProxy({
-    String? proxyAddress,
-    bool enable = false
-  }) {
-    if (enable) {
-      (_dio.httpClientAdapter as DefaultHttpClientAdapter).onHttpClientCreate =
-          (HttpClient client) {
-        client.findProxy = (uri) {
-          return proxyAddress ?? "";
-        };
-        client.badCertificateCallback =
-            (X509Certificate cert, String host, int port) => true;
-      };
-    }
-  }
+  ///代理抓包测试用
+  void proxy() async {
+    Map<String, String>? systemProxy = await SystemProxy.getProxySettings();
+    if (systemProxy != null) {
+      String? host = systemProxy["host"];
+      String? port = systemProxy["port"];
 
-  /// 设置https证书校验
-  void setHttpsCertificateVerification({
-    String? pem,
-    bool enable = false
-  }) {
-    if (enable) {
-      (_dio.httpClientAdapter as DefaultHttpClientAdapter).onHttpClientCreate  = (client) {
-        client.badCertificateCallback=(X509Certificate cert, String host, int port){
-          if(cert.pem==pem){ // 验证证书
+      if (host?.isNotEmpty == true && port?.isNotEmpty == true) {
+        (_dio.httpClientAdapter as DefaultHttpClientAdapter).onHttpClientCreate = (client) {
+          client.findProxy = (Uri uri) {
+            return 'PROXY $host:$port';
+          };
+          client.badCertificateCallback = (X509Certificate cert, String host, int port) {
             return true;
-          }
-          return false;
+          };
+          return null;
+        };
+      }else{
+        (_dio.httpClientAdapter as DefaultHttpClientAdapter).onHttpClientCreate = (client) {
+          client.badCertificateCallback = (X509Certificate cert, String host, int port) {
+            return true;
+          };
+        };
+      }
+    }else{
+      (_dio.httpClientAdapter as DefaultHttpClientAdapter).onHttpClientCreate = (client) {
+        client.badCertificateCallback = (X509Certificate cert, String host, int port) {
+          return true;
         };
       };
     }

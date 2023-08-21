@@ -29,6 +29,8 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  flutter_localizations:
+    sdk: flutter
 
 
   # The following adds the Cupertino Icons font to your application.
@@ -51,6 +53,16 @@ dev_dependencies:
   cookie_jar: ^3.0.1
   shared_preferences: ^2.0.15
   flutter_easyloading: ^3.0.5
+  # 获取各系统路径
+  path_provider: ^2.0.11
+  # https://juejin.cn/post/6924104248275763208#heading-33
+  get: ^4.6.5
+
+  # 提供国际化和本地化功能，包括消息翻译、复数和性别、日期/数字格式和解析以及双向文本。(机器翻译文本 暂时只是拿来做dateFormat)
+  intl: ^0.17.0
+
+  # 获取系统代理
+  system_proxy: ^0.1.0
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec

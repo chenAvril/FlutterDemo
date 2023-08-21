@@ -3,6 +3,16 @@ import 'dart:convert';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 
+// 必须是顶层函数
+_parseAndDecode(String response) {
+  // print("_parseAndDecode");
+  return jsonDecode(response);
+}
+
+parseJson(String text) {
+  return compute(_parseAndDecode, text);
+}
+
 class DioTransformer extends DefaultTransformer {
 
   ///表示请求时做一些转化或校验之类的
@@ -33,14 +43,4 @@ class DioTransformer extends DefaultTransformer {
   @override
   // TODO: implement jsonDecodeCallback
   JsonDecodeCallback? get jsonDecodeCallback =>parseJson;// super.jsonDecodeCallback;
-}
-
-// 必须是顶层函数
-_parseAndDecode(String response) {
-  // print("_parseAndDecode");
-  return jsonDecode(response);
-}
-
-parseJson(String text) {
-  return compute(_parseAndDecode, text);
 }
