@@ -4,40 +4,41 @@ import 'package:cookie_jar/cookie_jar.dart';
 import 'package:dio/adapter.dart';
 import 'package:dio/dio.dart';
 import 'package:dio_cookie_manager/dio_cookie_manager.dart';
+import 'package:flutter_demo/utils/LoadingUtils.dart';
 import 'package:system_proxy/system_proxy.dart';
 
 import 'dio_cache_interceptors.dart';
 import 'dio_interceptors.dart';
 import 'dio_transformer.dart';
 
-enum DioMethod {
-  get,
-  post,
-  put,
-  delete,
-  patch,
-  head,
-}
+/// 请求成功回调
+typedef RequestCallback<T> = void Function(dynamic result);
 
 class DioUtil {
-
   /// 连接超时时间
-  static const int CONNECT_TIMEOUT = 6*1000;
+  static const int CONNECT_TIMEOUT = 6 * 1000;
+
   /// 响应超时时间
-  static const int RECEIVE_TIMEOUT = 6*1000;
+  static const int RECEIVE_TIMEOUT = 6 * 1000;
+
   /// 发送超时时间
-  static const int SEND_TIMEOUT = 6*1000;
+  static const int SEND_TIMEOUT = 6 * 1000;
+
   /// 请求的URL前缀
   static String BASE_URL = "https://api.seniverse.com/v3/";
+
   /// 是否开启网络缓存,默认false
   static bool CACHE_ENABLE = false;
+
   /// 最大缓存时间(按秒), 默认缓存七天,可自行调节
   static int MAX_CACHE_AGE = 7 * 24 * 60 * 60;
+
   /// 最大缓存条数(默认一百条)
   static int MAX_CACHE_COUNT = 100;
 
   static DioUtil? _instance;
   static Dio _dio = Dio();
+
   Dio get dio => _dio;
 
   DioUtil._internal() {
@@ -52,7 +53,6 @@ class DioUtil {
     return _instance;
   }
 
-
   /// 取消请求token
   CancelToken _cancelToken = CancelToken();
 
@@ -66,8 +66,7 @@ class DioUtil {
         contentType: "application/json; charset=utf-8",
         connectTimeout: CONNECT_TIMEOUT,
         receiveTimeout: RECEIVE_TIMEOUT,
-        sendTimeout: SEND_TIMEOUT
-    );
+        sendTimeout: SEND_TIMEOUT);
 
     /// 初始化dio
     _dio = Dio(options);
@@ -94,25 +93,31 @@ class DioUtil {
       String? port = systemProxy["port"];
 
       if (host?.isNotEmpty == true && port?.isNotEmpty == true) {
-        (_dio.httpClientAdapter as DefaultHttpClientAdapter).onHttpClientCreate = (client) {
+        (_dio.httpClientAdapter as DefaultHttpClientAdapter)
+            .onHttpClientCreate = (client) {
           client.findProxy = (Uri uri) {
             return 'PROXY $host:$port';
           };
-          client.badCertificateCallback = (X509Certificate cert, String host, int port) {
+          client.badCertificateCallback =
+              (X509Certificate cert, String host, int port) {
             return true;
           };
           return null;
         };
-      }else{
-        (_dio.httpClientAdapter as DefaultHttpClientAdapter).onHttpClientCreate = (client) {
-          client.badCertificateCallback = (X509Certificate cert, String host, int port) {
+      } else {
+        (_dio.httpClientAdapter as DefaultHttpClientAdapter)
+            .onHttpClientCreate = (client) {
+          client.badCertificateCallback =
+              (X509Certificate cert, String host, int port) {
             return true;
           };
         };
       }
-    }else{
-      (_dio.httpClientAdapter as DefaultHttpClientAdapter).onHttpClientCreate = (client) {
-        client.badCertificateCallback = (X509Certificate cert, String host, int port) {
+    } else {
+      (_dio.httpClientAdapter as DefaultHttpClientAdapter).onHttpClientCreate =
+          (client) {
+        client.badCertificateCallback =
+            (X509Certificate cert, String host, int port) {
           return true;
         };
       };
@@ -124,44 +129,69 @@ class DioUtil {
     _dio.interceptors.add(LogInterceptor(responseBody: true));
   }
 
-  /// 请求类
-  Future<T> request<T>(String path, {
-    DioMethod method = DioMethod.get,
-    Map<String, dynamic>? params,
-    data,
-    CancelToken? cancelToken,
-    Options? options,
-    ProgressCallback? onSendProgress,
-    ProgressCallback? onReceiveProgress,
-  }) async {
-    const _methodValues = {
-      DioMethod.get: 'get',
-      DioMethod.post: 'post',
-      DioMethod.put: 'put',
-      DioMethod.delete: 'delete',
-      DioMethod.patch: 'patch',
-      DioMethod.head: 'head'
-    };
+  /// get请求
+  get(String path, RequestCallback onSuccess,
+      {RequestCallback? onFail,
+      queryParameters,
+      options,
+      onReceiveProgress}) async {
 
-    options ??= Options(method: _methodValues[method]);
     try {
-      Response response;
-      response = await _dio.request(path,
-          data: data,
-          queryParameters: params,
-          cancelToken: cancelToken ?? _cancelToken,
+      CancelToken cancelToken = CancelToken();
+      LoadingUtils.loading(onDismiss: (){
+        print('status : 1111111');
+        cancelToken.cancel('请求已取消');
+      });
+
+      var response = await _dio.get(path,
+          queryParameters: queryParameters,
           options: options,
-          onSendProgress: onSendProgress,
-          onReceiveProgress: onReceiveProgress
-      );
-      return response.data;
-    } on DioError catch (e) {
-      throw e;
+          cancelToken: cancelToken,
+          onReceiveProgress: onReceiveProgress);
+
+      LoadingUtils.dismiss();
+      print('cancelToken.isCancelled : ${cancelToken.isCancelled}');
+
+      if (response.statusCode == 200) {
+        onSuccess(response.data);
+      } else {
+        if (onFail != null) {
+          onFail(response.data ?? "");
+        }
+      }
+    } on Exception {
+      // catch (e)
+      // throw e;
+    }
+  }
+
+  /// post请求
+  post(String path, RequestCallback onSuccess,
+      {RequestCallback? onError,
+      queryParameters,
+      data,
+      options,
+      cancelToken,
+      onSendProgress,
+      onReceiveProgress}) async {
+    var response = await _dio.post(path,
+        data: data ?? {},
+        queryParameters: queryParameters,
+        options: options,
+        cancelToken: cancelToken,
+        onSendProgress: onSendProgress,
+        onReceiveProgress: onReceiveProgress);
+    if (response.statusCode == 200) {
+      onSuccess(response.data);
+    } else {
+      if (onError != null) {
+        onError(response.data ?? "");
+      }
     }
   }
 
   /// 取消网络请求
   void cancelRequests({CancelToken? token}) {
-     token ?? _cancelToken.cancel("cancelled");
+    token ?? _cancelToken.cancel("cancelled");
   }
 }

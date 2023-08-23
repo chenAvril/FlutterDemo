@@ -6,6 +6,7 @@ import 'package:get/get.dart';
 
 ///加载框和弹出框
 class LoadingUtils {
+
   ///表示普通的toast 不带图标
   static showToast(String msg) {
     EasyLoading.showToast(msg);
@@ -13,30 +14,6 @@ class LoadingUtils {
 
   ///表示展示 展示警告 吐司
   static showInfo(String msg) {
-    // if(ApiConfig.currentNetWork!="pro") {
-    //   showNetWorkInfo(msg);
-    // }else{
-    //   AlertDialog(msg, title: "提示");
-    // }
-    AlertDialog(msg, title: "提示");
-    //EasyLoading.showInfo(msg);
-  }
-
-  ///表示展示 展示警告 吐司
-  static showNetWorkInfo(String msg) {
-    AlertDialog(
-        msg,
-        title: "提示",
-        controlNerError: true,
-        onWillPop: () async {
-          NetErrorDialogShow = false;
-          return true;
-        }
-    );
-  }
-
-  ///表示展示 展示警告 吐司
-  static warnInfo(String msg) {
     AlertDialog(msg, title: "提示");
     //EasyLoading.showInfo(msg);
   }
@@ -47,12 +24,28 @@ class LoadingUtils {
     Widget? indicator,
     EasyLoadingMaskType? maskType = EasyLoadingMaskType.black,
     bool? dismissOnTap,
-  }) {
+    Function? onDismiss
+  }) async {
+
+    if(onDismiss != null){
+      EasyLoading.addStatusCallback((status) {
+        print('status : $status');
+        if(status == EasyLoadingStatus.dismiss){
+          onDismiss();
+
+          /// 延迟注销，否则会报错
+          Future.delayed(const Duration(milliseconds:10),(){
+            EasyLoading.removeAllCallbacks();
+          });
+        }
+      });
+    }
+
     EasyLoading.show(
         status: status,
         indicator: indicator,
         maskType: maskType,
-        dismissOnTap: false);
+        dismissOnTap: dismissOnTap ?? true);
   }
 
   ///表示展示成功的吐司
@@ -71,8 +64,10 @@ class LoadingUtils {
   }
 
   /// 关闭loading，，添加了dismissCallback后需要removeCallback
-  static dismiss() {
-    EasyLoading.dismiss();
+  static dismiss(){
+    if(EasyLoading.isShow){
+      EasyLoading.dismiss();
+    }
   }
 
   static InputDialog(String msg,
@@ -120,9 +115,6 @@ class LoadingUtils {
         ));
   }
 
-  static bool NetErrorDialogShow = false;
-  ///adaptive_dialog、giffy_dialog  # 弹框提示  去封装
-  ///
   ///表示弹框---带扩展
   static AlertDialog(String msg,
       {
@@ -135,15 +127,7 @@ class LoadingUtils {
         bool barrierDismissible = true,
         bool confirmBack = true,
         WillPopCallback? onWillPop,
-        bool controlNerError = false,
       }) {
-    if(controlNerError){
-      if(NetErrorDialogShow){
-        return;
-      }else{
-        NetErrorDialogShow = true;
-      }
-    }
 
     if (textCancel != null) {
       Get.defaultDialog(
@@ -174,9 +158,6 @@ class LoadingUtils {
                           flex: 1,
                           child: InkWell(
                             onTap: () {
-                              if(controlNerError){
-                                NetErrorDialogShow = false;
-                              }
                               Get.back();
                               onCancel?.call();
                             },
@@ -197,9 +178,6 @@ class LoadingUtils {
                           flex: 1,
                           child: InkWell(
                             onTap: () {
-                              if(controlNerError){
-                                NetErrorDialogShow = false;
-                              }
                               if(confirmBack){
                                 Get.back();
                               }
@@ -234,9 +212,6 @@ class LoadingUtils {
               const Divider(height: 1, color: Colors.grey),
               InkWell(
                 onTap: () {
-                  if(controlNerError){
-                    NetErrorDialogShow = false;
-                  }
                   if(confirmBack){
                     Get.back();
                   }

@@ -49,7 +49,7 @@ class DioInterceptors extends Interceptor {
 
   @override
   void onError(DioError err, ErrorInterceptorHandler handler) {
-    EasyLoading.showError(err.message);
+    // EasyLoading.showError(err.message);
 
     switch (err.type) {
       // 连接服务器超时

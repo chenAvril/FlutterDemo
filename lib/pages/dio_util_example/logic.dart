@@ -1,3 +1,4 @@
+import 'package:flutter_demo/utils/LoadingUtils.dart';
 import 'package:get/get.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_demo/http/entity/TestBean.dart';
@@ -26,15 +27,19 @@ class DioUtilExampleLogic extends GetxController {
     // DioUtil().setProxy(proxyAddress: "https://www.baidu.com", enable: true);
 
 
-    ResponseData result = await DioUtil().request(path, method: DioMethod.get, params: {
-      "key": "cggcrov6aaevbrqm",//私钥
+    var params = {
+      "key": "cggcrov6aaevbrqm", //私钥
       // "key": "U671D5446C",//公钥
       "location": "hefei"
-    }, cancelToken: _cancelToken);
+    };
 
-    // print("result : \n ${result.data.toString()}");
-    TestBean bean = TestBean.fromJson(result.data);
-    print("TestBean : \n ${bean.toJson()}");
+    DioUtil().get(path,queryParameters: params,(result){
+      // print("result : \n ${result.data.toString()}");
+      TestBean bean = TestBean.fromJson(result.data);
+      print("TestBean : \n ${bean.toJson()}");
+    });
+
+
   }
 
 }
