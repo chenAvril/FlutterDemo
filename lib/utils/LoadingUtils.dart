@@ -26,6 +26,11 @@ class LoadingUtils {
     bool? dismissOnTap,
     Function? onDismiss
   }) async {
+    EasyLoading.show(
+        status: status,
+        indicator: indicator,
+        maskType: maskType,
+        dismissOnTap: dismissOnTap ?? true);
 
     if(onDismiss != null){
       EasyLoading.addStatusCallback((status) {
@@ -40,12 +45,6 @@ class LoadingUtils {
         }
       });
     }
-
-    EasyLoading.show(
-        status: status,
-        indicator: indicator,
-        maskType: maskType,
-        dismissOnTap: dismissOnTap ?? true);
   }
 
   ///表示展示成功的吐司
