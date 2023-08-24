@@ -29,12 +29,12 @@ class LoadingUtils {
 
     if(onDismiss != null){
       EasyLoading.addStatusCallback((status) {
-        print('status : $status');
+        print('loading status : $status');
         if(status == EasyLoadingStatus.dismiss){
           onDismiss();
 
           /// 延迟注销，否则会报错
-          Future.delayed(const Duration(milliseconds:10),(){
+          Future.delayed(const Duration(milliseconds:50),(){
             EasyLoading.removeAllCallbacks();
           });
         }

@@ -135,7 +135,7 @@ class DioUtil {
     try {
       CancelToken cancelToken = CancelToken();
       LoadingUtils.loading(onDismiss: () {
-        print('status : 1111111');
+        print('get status : 1111111');
         cancelToken.cancel('请求已取消');
       });
 
@@ -146,7 +146,7 @@ class DioUtil {
           onReceiveProgress: onReceiveProgress);
 
       LoadingUtils.dismiss();
-      print('cancelToken.isCancelled : ${cancelToken.isCancelled}');
+      print('get cancelToken.isCancelled : ${cancelToken.isCancelled}');
 
       if (response.statusCode == 200) {
         onSuccess(response.data);
@@ -155,7 +155,13 @@ class DioUtil {
           onFail(response.data ?? "");
         }
       }
-    } on Exception {
+    } on Exception catch (e){
+      print('-----------------------------------------------------------------------------------------------------');
+      print('get Exception : $e');
+      print('-----------------------------------------------------------------------------------------------------');
+      if(onFail != null){
+        onFail(e);
+      }
       // catch (e)
       // throw e;
     }

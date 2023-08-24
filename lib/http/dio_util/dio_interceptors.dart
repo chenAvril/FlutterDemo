@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:dio/dio.dart';
+import 'package:flutter_demo/utils/JsonUtil.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import '../entity/response_data.dart';
 
@@ -22,7 +23,7 @@ class DioInterceptors extends Interceptor {
 
   @override
   void onResponse(Response response, ResponseInterceptorHandler handler) async {
-    print(response.data);
+    JsonUtil.printRespond(response);
     // 请求成功是对数据做基本处理
     if (response.statusCode == 200) {
       response.data =
@@ -49,7 +50,7 @@ class DioInterceptors extends Interceptor {
 
   @override
   void onError(DioError err, ErrorInterceptorHandler handler) {
-    // EasyLoading.showError(err.message);
+    print('DioInterceptors onError : ${err.message}');
 
     switch (err.type) {
       // 连接服务器超时

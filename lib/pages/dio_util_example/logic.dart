@@ -1,4 +1,5 @@
-import 'package:flutter_demo/utils/LoadingUtils.dart';
+
+import 'package:flutter_demo/utils/JsonUtil.dart';
 import 'package:get/get.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_demo/http/entity/TestBean.dart';
@@ -36,9 +37,11 @@ class DioUtilExampleLogic extends GetxController {
     DioUtil().get(path,queryParameters: params,(result){
       // print("result : \n ${result.data.toString()}");
       TestBean bean = TestBean.fromJson(result.data);
-      print("TestBean : \n ${bean.toJson()}");
-    });
+      state.text = JsonUtil.printJson(bean.toJson());
+      // print("TestBean : \n ${bean.toJson()}");
 
+      update();
+    });
 
   }
 
