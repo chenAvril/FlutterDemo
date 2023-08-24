@@ -25,7 +25,7 @@ class LoadingUtils {
     EasyLoadingMaskType? maskType = EasyLoadingMaskType.black,
     bool? dismissOnTap,
     Function? onDismiss
-  }) async {
+  }) {
     EasyLoading.show(
         status: status,
         indicator: indicator,
