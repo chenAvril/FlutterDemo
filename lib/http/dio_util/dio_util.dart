@@ -11,8 +11,8 @@ import 'dio_cache_interceptors.dart';
 import 'dio_interceptors.dart';
 import 'dio_transformer.dart';
 
-/// 请求成功回调
-typedef RequestCallback<T> = void Function(dynamic result);
+/// 请求回调
+typedef RequestCallback = void Function(dynamic result);
 
 class DioUtil {
   /// 连接超时时间
@@ -52,9 +52,6 @@ class DioUtil {
     _instance ?? DioUtil._internal();
     return _instance;
   }
-
-  /// 取消请求token
-  CancelToken _cancelToken = CancelToken();
 
   ///请求的Content-Type，默认值是"application/json; charset=utf-8".
   /// 如果您想以"application/x-www-form-urlencoded"格式编码请求数据,
@@ -135,10 +132,9 @@ class DioUtil {
       queryParameters,
       options,
       onReceiveProgress}) async {
-
     try {
       CancelToken cancelToken = CancelToken();
-      LoadingUtils.loading(onDismiss: (){
+      LoadingUtils.loading(onDismiss: () {
         print('status : 1111111');
         cancelToken.cancel('请求已取消');
       });
@@ -167,7 +163,7 @@ class DioUtil {
 
   /// post请求
   post(String path, RequestCallback onSuccess,
-      {RequestCallback? onError,
+      {RequestCallback? onFail,
       queryParameters,
       data,
       options,
@@ -184,12 +180,68 @@ class DioUtil {
     if (response.statusCode == 200) {
       onSuccess(response.data);
     } else {
-      if (onError != null) {
-        onError(response.data ?? "");
+      if (onFail != null) {
+        onFail(response.data ?? "");
       }
     }
   }
 
+  /// 下载
+  download(String urlPath, savePath, RequestCallback onSuccess,
+      {RequestCallback? onFail,
+      ProgressCallback? onReceiveProgress,
+      Map<String, dynamic>? queryParameters,
+      CancelToken? cancelToken,
+      bool deleteOnError = true,
+      String lengthHeader = Headers.contentLengthHeader,
+      data,
+      Options? options}) async {
+    var response = await _dio.download(urlPath, savePath,
+        onReceiveProgress: onReceiveProgress,
+        queryParameters: queryParameters,
+        cancelToken: cancelToken,
+        deleteOnError: deleteOnError,
+        lengthHeader: lengthHeader,
+        data: data,
+        options: options);
+
+    if (response.statusCode == 200) {
+      onSuccess(response.data);
+    } else {
+      if (onFail != null) {
+        onFail(response.data ?? "");
+      }
+    }
+  }
+
+  /// 上传
+  put(String path, RequestCallback onSuccess,
+      {RequestCallback? onFail,
+      data,
+      Map<String, dynamic>? queryParameters,
+      Options? options,
+      CancelToken? cancelToken,
+      ProgressCallback? onSendProgress,
+      ProgressCallback? onReceiveProgress}) async {
+    var response = await _dio.put(path,
+        data: data,
+        queryParameters: queryParameters,
+        options: options,
+        cancelToken: cancelToken,
+        onSendProgress: onSendProgress,
+        onReceiveProgress: onReceiveProgress);
+
+    if (response.statusCode == 200) {
+      onSuccess(response.data);
+    } else {
+      if (onFail != null) {
+        onFail(response.data ?? "");
+      }
+    }
+  }
+
+  /// 取消请求token
+  final CancelToken _cancelToken = CancelToken();
   /// 取消网络请求
   void cancelRequests({CancelToken? token}) {
     token ?? _cancelToken.cancel("cancelled");

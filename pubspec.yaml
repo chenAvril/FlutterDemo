@@ -57,9 +57,13 @@ dev_dependencies:
   path_provider: ^2.0.11
   # https://juejin.cn/post/6924104248275763208#heading-33
   get: ^4.6.5
+  permission_handler: ^10.2.0
 
   # 提供国际化和本地化功能，包括消息翻译、复数和性别、日期/数字格式和解析以及双向文本。(机器翻译文本 暂时只是拿来做dateFormat)
   intl: ^0.17.0
+
+  # 图片下载
+  image_gallery_saver: ^1.7.1
 
   # 获取系统代理
   system_proxy: ^0.1.0
