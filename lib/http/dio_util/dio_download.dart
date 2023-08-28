@@ -1,5 +1,4 @@
 import 'package:dio/dio.dart';
-import 'package:dio/adapter.dart';
 import 'package:flutter/foundation.dart';
 import 'dart:typed_data';
 import 'package:permission_handler/permission_handler.dart';
@@ -24,12 +23,12 @@ class Download {
   }) async {
     var dio = Dio();
     // 跳过https ssl证书校验
-    (dio.httpClientAdapter as DefaultHttpClientAdapter).onHttpClientCreate =
-        (client) {
-      client.badCertificateCallback = (cert, host, port) {
-        return true;
-      };
-    };
+    // (dio.httpClientAdapter as IOHttpClientAdapter).onHttpClientCreate =
+    //     (client) {
+    //   client.badCertificateCallback = (cert, host, port) {
+    //     return true;
+    //   };
+    // };
     try {
       var responst = await dio.download(url, path, onReceiveProgress: (received, total) {
         if (total == -1) {

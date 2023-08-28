@@ -1,7 +1,6 @@
 import 'dart:io';
 
 import 'package:cookie_jar/cookie_jar.dart';
-import 'package:dio/adapter.dart';
 import 'package:dio/dio.dart';
 import 'package:dio_cookie_manager/dio_cookie_manager.dart';
 import 'package:flutter_demo/utils/LoadingUtils.dart';
@@ -15,14 +14,6 @@ import 'dio_transformer.dart';
 typedef RequestCallback = void Function(dynamic result);
 
 class DioUtil {
-  /// 连接超时时间
-  static const int CONNECT_TIMEOUT = 6 * 1000;
-
-  /// 响应超时时间
-  static const int RECEIVE_TIMEOUT = 6 * 1000;
-
-  /// 发送超时时间
-  static const int SEND_TIMEOUT = 6 * 1000;
 
   /// 请求的URL前缀
   static String BASE_URL = "https://api.seniverse.com/v3/";
@@ -61,9 +52,9 @@ class DioUtil {
     BaseOptions options = BaseOptions(
         baseUrl: BASE_URL,
         contentType: "application/json; charset=utf-8",
-        connectTimeout: CONNECT_TIMEOUT,
-        receiveTimeout: RECEIVE_TIMEOUT,
-        sendTimeout: SEND_TIMEOUT);
+        connectTimeout: const Duration(seconds: 60),
+        receiveTimeout: const Duration(seconds: 60),
+        sendTimeout: const Duration(seconds: 60));
 
     /// 初始化dio
     _dio = Dio(options);
@@ -80,6 +71,8 @@ class DioUtil {
 
     /// 添加缓存拦截器
     _dio.interceptors.add(DioCacheInterceptors());
+
+    proxy();
   }
 
   ///代理抓包测试用
@@ -89,35 +82,20 @@ class DioUtil {
       String? host = systemProxy["host"];
       String? port = systemProxy["port"];
 
+      print('PROXY -------- $host:$port');
       if (host?.isNotEmpty == true && port?.isNotEmpty == true) {
-        (_dio.httpClientAdapter as DefaultHttpClientAdapter)
-            .onHttpClientCreate = (client) {
-          client.findProxy = (Uri uri) {
-            return 'PROXY $host:$port';
-          };
-          client.badCertificateCallback =
-              (X509Certificate cert, String host, int port) {
-            return true;
-          };
-          return null;
-        };
-      } else {
-        (_dio.httpClientAdapter as DefaultHttpClientAdapter)
-            .onHttpClientCreate = (client) {
-          client.badCertificateCallback =
-              (X509Certificate cert, String host, int port) {
-            return true;
-          };
-        };
+        dio.httpClientAdapter = IOHttpClientAdapter(
+          createHttpClient: () {
+            final client = HttpClient();
+            client.findProxy = (uri) {
+              return 'PROXY $host:$port';
+            };
+            client.badCertificateCallback =
+                (X509Certificate cert, String host, int port) => true;
+            return client;
+          },
+        );
       }
-    } else {
-      (_dio.httpClientAdapter as DefaultHttpClientAdapter).onHttpClientCreate =
-          (client) {
-        client.badCertificateCallback =
-            (X509Certificate cert, String host, int port) {
-          return true;
-        };
-      };
     }
   }
 

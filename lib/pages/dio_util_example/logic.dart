@@ -34,7 +34,9 @@ class DioUtilExampleLogic extends GetxController {
       "location": "hefei"
     };
 
-    DioUtil().get(path,queryParameters: params,(result){
+    Options options = Options(extra: {'test':'1111'});
+
+    DioUtil().get(path,queryParameters: params,options: options,(result){
       // print("result : \n ${result.data.toString()}");
       TestBean bean = TestBean.fromJson(result.data);
       state.text = JsonUtil.printJson(bean.toJson());
